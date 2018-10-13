@@ -38,8 +38,8 @@ source-repository head
 
 library
     build-depends:
-        async == 2.1.*,
-        base >= 4.8 && < 4.11,
+        async >= 2.1 && < 2.3,
+        base >= 4.8 && < 4.12,
         containers == 0.5.*,
         foreign-store == 0.2.*,
         stm == 2.4.*
