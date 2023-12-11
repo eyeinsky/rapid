@@ -1,14 +1,12 @@
-name:     rapid
-version:  0.1.4
-category: Development
-synopsis: Rapid prototyping with GHCi: hot reloading of running
-    components and reload-surviving values
-
-maintainer:   Ertugrul Söylemez <esz@posteo.de>
+name:         rapid
+version:      0.1.5
+category:     Development
+synopsis:     Hot reload and reload-surviving values with GHCi
+maintainer:   Markus Läll <markus.l2ll@gmail.com>
 author:       Ertugrul Söylemez <esz@posteo.de>
 copyright:    Copyright 2018 Ertugrul Söylemez
-homepage:     https://github.com/esoeylemez/rapid
-bug-reports:  https://github.com/esoeylemez/rapid/issues
+homepage:     https://github.com/haskell-rapid/rapid
+bug-reports:  https://github.com/haskell-rapid/rapid
 license:      BSD3
 license-file: LICENSE
 
@@ -33,7 +31,7 @@ extra-source-files: CHANGELOG.md README.md
 
 source-repository head
     type:     git
-    location: https://github.com/esoeylemez/rapid.git
+    location: https://github.com/haskell-rapid/rapid
 
 
 library
