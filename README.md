@@ -1,5 +1,4 @@
-Rapid
-=====
+# [Rapid](https://hackage.haskell.org/package/rapid)
 
 This is a helper library for rapid prototyping in GHCi sessions.  It
 provides hot-reloadable background threads as well as values that can be
