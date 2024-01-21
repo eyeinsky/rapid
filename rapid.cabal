@@ -1,5 +1,5 @@
 name:         rapid
-version:      0.1.5
+version:      0.1.5.2
 category:     Development
 synopsis:     Hot reload and reload-surviving values with GHCi
 maintainer:   Markus Läll <markus.l2ll@gmail.com>
@@ -10,20 +10,27 @@ bug-reports:  https://github.com/haskell-rapid/rapid
 license:      BSD3
 license-file: LICENSE
 
-description:  This package provides a rapid prototyping suite for GHCi
-    that can be used standalone or integrated into editors.  You can
-    hot-reload individual running components as you make changes to
-    their code.  It is designed to shorten the development cycle during
-    the development of long-running programs like servers, web
-    applications and interactive user interfaces.
-    .
-    It can also be used in the context of batch-style programs:  Keep
-    resources that are expensive to create in memory and reuse them
-    across module reloads instead of reloading/recomputing them after
-    every code change.
-    .
-    Technically this package is a safe and convenient wrapper around
-    <https://hackage.haskell.org/package/foreign-store foreign-store>.
+description:  Features:
+
+              .
+
+              - Reload individual components of your application as
+                you iterate: improves development experience for
+                long-running applications such as (web) servers or
+                user interfaces by keeping the app running in the
+                background and allowes reloading components after code
+                changes.
+
+              .
+
+              - Reuse expensive resources across reloads: useful in
+                batch-style programs to compute/aquire a resource
+                once, then reuse it across code reloads.
+
+              .
+
+              Technically, this package is a safe and convenient wrapper around
+              <https://hackage.haskell.org/package/foreign-store foreign-store>.
 
 build-type:         Simple
 cabal-version:      >= 1.10

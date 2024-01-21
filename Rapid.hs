@@ -1,7 +1,7 @@
 -- |
 -- Copyright:  (c) 2016 Ertugrul Söylemez
 -- License:    BSD3
--- Maintainer: Ertugrul Söylemez <esz@posteo.de>
+-- Maintainer: Markus Läll <markus.l2ll@gmail.com>
 -- Stability:  experimental
 --
 -- This module provides a rapid prototyping suite for GHCi that can be
@@ -405,14 +405,16 @@ that does both and bind that one to a key instead:
 
 {- $intro
 
-While working on a project you may want to have your code running in the
-background and restart parts of it as you make changes.  The premise of
-this introduction is that you already have such a project, for example a
-web application, and that you use a persistent GHCi session (either
-standalone or built into your editor).
+While developing a project you may want to have your app running in
+the background and restart (parts of) it as you iterate.  The premises
+to using this library are:
 
-To use this library in your project create a module conventionally named
-@DevelMain@ that exports an action conventionally named @update@:
+1. you already have such a project
+
+2. you use GHCi
+
+To use this functionality, create a new module in your project and
+export the @update@ action:
 
 > module DevelMain (update) where
 >
@@ -424,11 +426,9 @@ To use this library in your project create a module conventionally named
 >         -- We'll list our components here shortly.
 >         pure ()
 
-The idea is that within a GHCi session you run this @update@ action
-whenever you want to reload your project during development.  In the
-simplest case, like in a web application, your project consists of a
-single HTTP server thread that is just restarted each time you reload.
-Here is an example using the Snap Framework:
+After loading this module in GHCi you run @update@ whenever you want
+to restart the application in the background.  E.g, in the case of a
+web server that server is simply restarted on every @update@:
 
 > import qualified Data.Text as T
 > import Rapid
@@ -440,22 +440,18 @@ Here is an example using the Snap Framework:
 >         restart r "webserver" $
 >             quickHttpServe (writeText (T.pack "Hello world!"))
 
-Once you run @update@ in a GHCi session, a server is started (port 8000)
-that keeps running in the background, even when you reload modules.  The
-REPL is fully responsive, so you can continue working.  When you want to
-apply the changes you have made, you reload the @DevelMain@ module and
-run @update@ again.  To see this in action, change the text string in
-the example, reload the module and then run @update@.  Also observe that
-nothing is changed until you actually run @update@.
+The app keeps running in the background even when you reload modules,
+and GHCi REPL continues to be functional as well.  To apply new
+changes, you simply reload @DevelMain@ again and run @update@.
+Changing "Hello world!" to something else above will start responding
+with the new text after you run @update@.
 
-When you want to stop a running background thread, replace 'restart'
-within the @update@ action by 'stop' and run @update@.  The action given
-to 'stop' is actually ignored.  It only takes the action argument for
-your convenience.
+To stop the background thread, replace @restart@ with @stop@ within
+@update@ and run it.  Note that the action given to 'stop' is actually
+ignored.  It only takes the action argument for your convenience.
 
-You can run multiple threads at the same time and also have threads that
-are not restarted during a reload, but are only started and then kept
-running:
+You can run multiple threads in the background simultaneously, have
+some of them restart while others not:
 
 > import MyProject.MyDatabase
 > import MyProject.MyBackgroundWorker
@@ -464,28 +460,23 @@ running:
 >
 > update =
 >     rapid 0 $ \r -> do
->         start r "database" myDatabase
->         start r "worker" myBackgroundWorker
->         restart r "webserver" myWebServer
+>         start r "database" myDatabase       -- doesn't restart on update
+>         start r "worker" myBackgroundWorker -- doesn't restart on update
+>         restart r "webserver" myWebServer   -- restarts on update
 
-Usually you would put 'restart' in front of the component that you are
-currently working on, while using 'start' with all others.
+Usually you'd use @restart@ in front of the component you are working
+on, while using @start@ for others.
 
-Note that even though you are working on the code in
-@MyProject.MyWebServer@ you are always reloading the @DevelMain@ module.
-There is nothing wrong with loading and reloading other modules, but
-only this module gives you access to your @update@ action.
+Note that even while working on @MyProject.MyWebServer@ you're always
+reloading @DevelMain@ to get the new @update@.
 
 -}
 
 
 {- $reusing
 
-Mutable references as introduced in the previous section can also be
-used to shorten the development cycle in the case when an expensive
-resource has to be created.  As an example imagine that you need to
-parse a huge file into a data structure.  You can keep the result of
-that in memory across reloads.  Example with parsing JSON:
+This library can also be used to shorten the development cycle when
+using expensive resources:
 
 > import Control.Exception
 > import Data.Aeson
@@ -499,48 +490,45 @@ that in memory across reloads.  Example with parsing JSON:
 >
 >         -- You can now reuse 'value' across reloads.
 
-If you want to recreate the value at some point, you can just change
-'createRef' to 'writeRef' and then run @update@.  Keep in mind to change
-it back @createRef@ afterward.  Use 'deleteRef' to remove values you no
-longer need, so they can be garbage-collected.
+The above parses blah.json just once on startup. To actually recreate
+the value replace @createRef@ to @writeRef@ temporarily and run @update@.
+
+Using @deleteRef@ in the same manner removes values you no longer need.
 
 -}
 
 
 {- $safety
 
-It's easy to crash your GHCi session with this library.  In order to
-prevent that, you must follow these rules:
+It's easy to crash GHCi with this library.  In order to prevent that,
+follow these rules:
 
-  * Do not change your service name type (the type argument of 'Rapid',
-    i.e. the second argument to 'restart', 'start' and 'stop') within a
-    session.  The simplest way to do that is to resist the temptation to
-    define a custom name type, and just use strings instead.  If you do
-    change the name type, you should restart GHCi.
+  * Do not change your service name type (the second argument to
+    @start@, @stop@ and @restart@) within a session.  Simplest way
+    to do that is to resist the temptation to define a custom name
+    type and just use strings instead.  If you do change the name
+    type then you need to restart GHCi.
 
-  * Be careful with mutable variable created with 'createRef':  If the
-    value type changes (e.g. constructors or fields were changed), the
-    variable must be recreated, for example by using 'writeRef' once.  This
-    most likely entails restarting all threads that were using the variable.
-    Again the safest option is to just restart GHCi.
+  * Be careful with mutable variables created with @createRef@: if the
+    value type changes (e.g. constructors or fields were changed), so
+    must the variable be recreated, e.g by using @writeRef@ once.
+    This likely also entails restarting all the threads that were
+    using this variable.  Again, the safest option is to restart GHCi.
 
   * If any package in the current environment changes (especially this
     library itself), for example by updating a package via @cabal@ or
-    @stack@, the @update@ action is likely to crash or go wrong in subtle
-    ways due to binary incompatibility.  If packages change, restart GHCi.
+    @stack@, the @update@ action is likely to crash or go wrong in
+    subtle ways due to binary incompatibility.  Again, restarting GHCi
+    solves this.
 
-  * __This library is a development tool!  Do not even think of using it to hot-reload in a productive environment!__
-    There are much safer and more appropriate ways to hot-reload code in
-    production, for example by using a plugin system.
+  * __This library is a development tool!  Do not use it to hot-reload
+    productive environments!__ There are much safer and more
+    appropriate ways to hot-reload code in production, for example by
+    using a plugin system.
 
 The reason for this unsafety is that the underlying /foreign-store/
-library is itself very unsafe in nature and requires that we maintain
-binary compatibility.  This library hides most of that unsafety, but
-still requires that you follow the rules above.
-
-Please take the last rule seriously and never ever use this library in
-production!  If something goes wrong during a reload, we do not get a
-convenient run-time exception; we get a memory violation, which can
-cause anything from a segfault to a remotely exploitable security hole.
+library is itself unsafe by nature, requiring us to maintain binary
+compatibility.  This library hides most of that unsafety, but still
+requires you to follow the rules listed above.
 
 -}
