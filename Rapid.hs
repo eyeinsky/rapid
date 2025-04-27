@@ -483,7 +483,7 @@ using expensive resources:
 > import qualified Data.ByteString as B
 >
 > update =
->     rapid 0 $ \r ->
+>     rapid 0 $ \r -> do
 >         value <- createRef r "file" $
 >             B.readFile "blah.json" >>=
 >             either (throwIO . userError) pure . eitherDecode
