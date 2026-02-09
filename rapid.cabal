@@ -1,5 +1,5 @@
 name:         rapid
-version:      0.1.5.3
+version:      0.1.5.4
 category:     Development
 synopsis:     Hot reload and reload-surviving values with GHCi
 maintainer:   Markus Läll <markus.l2ll@gmail.com>
